@@ -13,6 +13,7 @@ import Header from "../components/Header";
 import styles from "../styles/index";
 import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Link, router } from "expo-router";
 
 // App Meu Perfil Dev (Etapa 4 de 4): a versão final da semana
 // Continue no mesmo projeto. A tela que você montou antes do intervalo agora ganha vida com o useState.
@@ -66,7 +67,7 @@ export default function Index() {
       >
         <View style={styles.header}>
           <Image
-            source={{ uri: "https://i.pravatar.cc/300?img=41" }}
+            source={{ uri: "https://i.pravatar.cc/300?img=12" }}
             style={styles.photo}
           />
           <Text style={styles.name}>{name}</Text>
@@ -109,9 +110,11 @@ export default function Index() {
           {showSkills ? (
             <View style={styles.skills}>
               {skills.map((el) => (
-                <View key={el.id} style={styles.skill}>
-                  <Text style={styles.skillText}>{el.name}</Text>
-                </View>
+                <Link key={el.id} href={`/habilidades/${el.id}`}>
+                  <View style={styles.skill}>
+                    <Text style={styles.skillText}>{el.name}</Text>
+                  </View>
+                </Link>
               ))}
             </View>
           ) : null}
@@ -146,15 +149,13 @@ export default function Index() {
 
           <Pressable
             accessibilityRole="button"
-            onPress={() =>
-              Alert.alert("Entre em contato", `Envie um e-mail para ${email}`)
-            }
+            onPress={() => router.push("/recados")}
             style={({ pressed }) => [
               styles.contactButton,
               pressed && styles.contactButtonPressed,
             ]}
           >
-            <Text style={styles.buttonText}>Entre em contato</Text>
+            <Text style={styles.buttonText}>Entrar na tela de Recados</Text>
           </Pressable>
         </View>
       </ScrollView>
