@@ -9,10 +9,9 @@ import {
   TouchableOpacity,
 } from "react-native";
 
-import Header from "../components/Header";
-import styles from "../styles/index";
+import Header from "../../components/Header";
+import styles from "../../styles/index";
 import { useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, router } from "expo-router";
 
 // App Meu Perfil Dev (Etapa 4 de 4): a versão final da semana
@@ -58,8 +57,8 @@ export default function Index() {
   };
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <StatusBar style="dark" />
+    <View style={styles.screen}>
+      <StatusBar style="light" />
       <Header />
       <ScrollView
         style={styles.container}
@@ -67,7 +66,9 @@ export default function Index() {
       >
         <View style={styles.header}>
           <Image
-            source={{ uri: "https://i.pravatar.cc/300?img=12" }}
+            source={{
+              uri: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=400&h=400&q=80",
+            }}
             style={styles.photo}
           />
           <Text style={styles.name}>{name}</Text>
@@ -110,7 +111,7 @@ export default function Index() {
           {showSkills ? (
             <View style={styles.skills}>
               {skills.map((el) => (
-                <Link key={el.id} href={`/habilidades/${el.id}`}>
+                <Link key={el.id} href={`/habilidade/${el.id}`}>
                   <View style={styles.skill}>
                     <Text style={styles.skillText}>{el.name}</Text>
                   </View>
@@ -159,6 +160,6 @@ export default function Index() {
           </Pressable>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

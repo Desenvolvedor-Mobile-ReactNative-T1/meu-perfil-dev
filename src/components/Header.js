@@ -1,20 +1,27 @@
 import { StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { headerColor } from "../styles/header";
 
 export default function Header() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.eyebrow}>Meu Perfil Dev</Text>
-      <Text style={styles.title}>Bem-vindo ao meu perfil</Text>
-    </View>
+    <SafeAreaView edges={["top"]} style={styles.safe}>
+      <View style={styles.container}>
+        <Text style={styles.eyebrow}>Meu Perfil Dev</Text>
+        <Text style={styles.title}>Bem-vindo ao meu perfil</Text>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safe: {
+    backgroundColor: headerColor,
+  },
   container: {
-    backgroundColor: "#c2200b",
+    alignItems: "center",
     paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 18,
+    paddingTop: 12,
+    paddingBottom: 16,
   },
   eyebrow: {
     color: "#d7f1ff",
