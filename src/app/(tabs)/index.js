@@ -11,8 +11,9 @@ import {
 
 import Header from "../../components/Header";
 import styles from "../../styles/index";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // App Meu Perfil Dev (Etapa 4 de 4): a versão final da semana
 // Continue no mesmo projeto. A tela que você montou antes do intervalo agora ganha vida com o useState.
@@ -48,13 +49,28 @@ export default function Index() {
     setRecommendations(recommendations + 1);
   };
 
-  const handleAvailable = () => {
+  const handleAvailable = async () => {
+    await AsyncStorage.setItem(
+      "@meuperfildev:disponibilidade",
+      JSON.stringify(!available),
+    );
     setAvailable(!available);
+  };
+
+  const getStorage = async () => {
+    const avaiableResult = await AsyncStorage.getItem(
+      "@meuperfildev:disponibilidade",
+    );
+    setAvailable(JSON.parse(avaiableResult));
   };
 
   const handleShowSkill = () => {
     setShowSkill(!showSkills);
   };
+
+  useEffect(() => {
+    getStorage();
+  }, []);
 
   return (
     <View style={styles.screen}>
