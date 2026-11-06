@@ -6,6 +6,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -15,9 +16,41 @@ export default function Recados() {
   const navigation = useNavigation();
   const [recado, setRecado] = useState("");
   const [recados, setRecados] = useState([]);
+  const [erros, setErros] = useState({});
+
+  const tiposMensagem = ["Elogio", "Critica", "Proposta"];
+
+  const [form, setForm] = useState({
+    nome: "",
+    email: "",
+    querReceberResposta: false,
+    mensagem: "",
+    tipo: "",
+  });
+
+  const validar = () => {
+    let novosErros = {};
+
+    if (form.nome.length < 3) {
+      novosErros.nome = "Digite seu nome";
+    }
+
+    if (form.email.length < 5) {
+      novosErros.email = "Digite seu email";
+    }
+
+    return novosErros;
+  };
 
   const handleSave = async () => {
-    const newArray = [...recados, recado];
+    const resultValidation = validar();
+    setErros(resultValidation);
+
+    if (Object.keys(resultValidation).length > 0) {
+      return;
+    }
+
+    const newArray = [...recados, form];
 
     await AsyncStorage.setItem(
       "@meuperfildev:recados",
@@ -34,6 +67,11 @@ export default function Recados() {
     setRecados(storedRecados);
   };
 
+  // troca SÓ o campo que mudou
+  function updateForm(field, value) {
+    setForm({ ...form, [field]: value });
+  }
+
   useEffect(() => {
     navigation.setOptions({
       tabBarBadge: recados.length > 0 ? recados.length : undefined,
@@ -47,7 +85,6 @@ export default function Recados() {
   const quantidade =
     recados.length === 1 ? "1 recado" : `${recados.length} recados`;
 
-  console.log(recados);
   return (
     <View style={styles.screen}>
       <View style={styles.countRow}>
@@ -57,11 +94,58 @@ export default function Recados() {
         <Text style={styles.countText}>{quantidade}</Text>
       </View>
 
-      <TextInput
-        style={styles.input}
-        value={recado}
-        onChangeText={(text) => setRecado(text)}
-      />
+      <View style={{ padding: 12 }}>
+        <Text>Nome</Text>
+        <TextInput
+          style={styles.input}
+          value={form.nome}
+          onChangeText={(value) => updateForm("nome", value)}
+        />
+
+        <Text>Email</Text>
+        <TextInput
+          style={styles.input}
+          value={form.email}
+          onChangeText={(text) => updateForm("email", text)}
+        />
+        {erros.email && <Text style={{ color: "red" }}>{erros.email}</Text>}
+
+        <View style={{ gap: 12, flexDirection: "row" }}>
+          {tiposMensagem.map((value) => (
+            <Pressable
+              key={value}
+              onPress={() => updateForm("tipo", value)}
+              style={{
+                borderWidth: 1,
+                borderColor: "#000",
+                padding: 12,
+                borderRadius: 12,
+                backgroundColor: form.tipo === value ? "green" : "white",
+              }}
+            >
+              <Text style={{ color: form.tipo === value ? "white" : "#000" }}>
+                {value}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text>Recado</Text>
+        <TextInput
+          style={styles.input}
+          value={form.mensagem}
+          onChangeText={(text) => updateForm("mensagem", text)}
+          multiline
+        />
+
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Text>Quer receber resposta?</Text>
+          <Switch
+            value={form.querReceberResposta}
+            onValueChange={(value) => updateForm("querReceberResposta", value)}
+          />
+        </View>
+      </View>
 
       <Pressable onPress={() => handleSave()} style={styles.buttonSave}>
         <Text style={{ textAlign: "center" }}>Salvar</Text>
@@ -70,7 +154,7 @@ export default function Recados() {
       <ScrollView contentContainerStyle={styles.list}>
         {recados.map((recado, index) => (
           <Text key={`${recado}-${index}`} style={styles.recado}>
-            {recado}
+            {recado.nome}:{recado.mensagem}
           </Text>
         ))}
       </ScrollView>
