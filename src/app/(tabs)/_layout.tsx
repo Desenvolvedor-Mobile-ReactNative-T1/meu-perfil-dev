@@ -1,8 +1,11 @@
-import { Tabs } from "expo-router/js-tabs";
+import { ComponentProps } from "react";
+import { Tabs, type TabsScreenOptions } from "expo-router/js-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { headerOptions } from "../../styles/header";
 
-const icones = {
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
+
+const icones: Record<string, IoniconName> = {
   index: "person",
   habilidades: "code-slash",
   recados: "chatbubbles",
@@ -11,13 +14,17 @@ const icones = {
 export default function TabsLayout() {
   return (
     <Tabs
-      screenOptions={({ route }) => ({
-        ...headerOptions,
+      screenOptions={({ route }): TabsScreenOptions => ({
+        ...(headerOptions as TabsScreenOptions),
         headerShown: false,
         tabBarActiveTintColor: "#2f9e44",
         tabBarInactiveTintColor: "#9aa0a6",
         tabBarIcon: ({ color }) => (
-          <Ionicons name={icones[route.name]} color={color} size={24} />
+          <Ionicons
+            name={icones[route.name] ?? "ellipse"}
+            color={typeof color === "string" ? color : undefined}
+            size={24}
+          />
         ),
       })}
     >
