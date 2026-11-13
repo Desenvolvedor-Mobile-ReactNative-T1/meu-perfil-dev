@@ -61,7 +61,10 @@ export default function Index() {
     const avaiableResult = await AsyncStorage.getItem(
       "@meuperfildev:disponibilidade",
     );
-    setAvailable(JSON.parse(avaiableResult));
+
+    if (avaiableResult) {
+      setAvailable(JSON.parse(avaiableResult));
+    }
   };
 
   const handleShowSkill = () => {

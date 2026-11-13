@@ -1,6 +1,9 @@
 import { Stack } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { headerOptions } from "../styles/header";
+import { ComponentProps } from "react";
+
+type StackOptions = ComponentProps<typeof Stack.Screen>["options"];
 
 export default function Layout() {
   return (
@@ -11,7 +14,7 @@ export default function Layout() {
           name="habilidade/[id]"
           options={{
             title: "Habilidade",
-            ...headerOptions,
+            ...(headerOptions as StackOptions),
           }}
         />
       </Stack>
