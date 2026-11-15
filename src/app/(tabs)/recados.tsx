@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -75,6 +76,8 @@ export default function Recados() {
 
   const quantidade =
     recados.length === 1 ? "1 recado" : `${recados.length} recados`;
+
+  console.log(recados);
 
   return (
     <View style={styles.screen}>
@@ -202,13 +205,18 @@ export default function Recados() {
       >
         <Text style={{ textAlign: "center" }}>Salvar</Text>
       </Pressable>
-      <ScrollView contentContainerStyle={styles.list}>
-        {recados.map((recado, index) => (
-          <Text key={`${recado}-${index}`} style={styles.recado}>
-            {recado.nome}:{recado.mensagem}
-          </Text>
-        ))}
-      </ScrollView>
+      <FlatList
+        data={recados}
+        contentContainerStyle={{ gap: 24 }}
+        keyExtractor={(item) => String(`${item.nome}${Math.random()}`)}
+        renderItem={({ item }) => (
+          <>
+            <Text style={styles.recado}>
+              {item.nome}:{item.mensagem}
+            </Text>
+          </>
+        )}
+      />
     </View>
   );
 }
