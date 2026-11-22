@@ -1,12 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
-  ScrollView,
+  RefreshControl,
   StyleSheet,
   Switch,
   Text,
@@ -16,6 +16,12 @@ import {
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { recadoSchema } from "../../schemas/recado";
+import {
+  apagarRecado,
+  criarRecado,
+  listarRecados,
+  type Recado,
+} from "../../services/recados";
 
 type RecadoForm = z.infer<typeof recadoSchema>;
 
@@ -23,7 +29,10 @@ const tiposMensagem = ["Elogio", "Sugestão", "Proposta"] as const;
 
 export default function Recados() {
   const navigation = useNavigation();
-  const [recados, setRecados] = useState<RecadoForm[]>([]);
+  const [recados, setRecados] = useState<Recado[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [atualizando, setAtualizando] = useState(false);
+  const [erro, setErro] = useState(false);
 
   const {
     control,
@@ -45,24 +54,41 @@ export default function Recados() {
   const querResposta = watch("querResposta");
   const mensagem = watch("mensagem");
 
-  const handleSave = async (dados: RecadoForm) => {
-    const newArray = [...recados, dados];
+  const buscarRecados = async (puxando = false) => {
+    try {
+      if (puxando) {
+        setAtualizando(true);
+      }
 
-    await AsyncStorage.setItem(
-      "@meuperfildev:recados",
-      JSON.stringify(newArray),
-    );
-
-    setRecados(newArray);
-    reset();
+      setErro(false);
+      const dados = await listarRecados();
+      setRecados(dados);
+    } catch {
+      setErro(true);
+    } finally {
+      setCarregando(false);
+      setAtualizando(false);
+    }
   };
 
-  const getStorage = async () => {
-    const result = await AsyncStorage.getItem("@meuperfildev:recados");
-    const storedRecados = result ? JSON.parse(result) : [];
+  async function enviarRecado(dados: RecadoForm) {
+    try {
+      await criarRecado(dados);
+      reset();
+      await buscarRecados();
+    } catch {
+      setErro(true);
+    }
+  }
 
-    setRecados(storedRecados);
-  };
+  async function removerRecado(id: number) {
+    try {
+      await apagarRecado(id);
+      setRecados((lista) => lista.filter((recado) => recado.id !== id));
+    } catch {
+      setErro(true);
+    }
+  }
 
   useEffect(() => {
     navigation.setOptions({
@@ -71,16 +97,52 @@ export default function Recados() {
   }, [navigation, recados.length]);
 
   useEffect(() => {
-    getStorage();
+    buscarRecados();
   }, []);
 
   const quantidade =
     recados.length === 1 ? "1 recado" : `${recados.length} recados`;
 
-  console.log(recados);
+  if (carregando) {
+    return (
+      <View style={styles.centro}>
+        <ActivityIndicator size="large" color="#2f9e44" />
+      </View>
+    );
+  }
+
+  if (erro) {
+    return (
+      <View style={styles.centro}>
+        <Text>Não foi possível carregar os recados.</Text>
+        <Pressable
+          style={styles.buttonSave}
+          onPress={() => {
+            setCarregando(true);
+            buscarRecados();
+          }}
+        >
+          <Text style={{ textAlign: "center" }}>Tentar de novo</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.screen}>
+    <FlatList
+      style={styles.screen}
+      data={recados}
+      keyExtractor={(item) => String(item.id)}
+      contentContainerStyle={{ gap: 24, paddingBottom: 24 }}
+      keyboardShouldPersistTaps="handled"
+      refreshControl={
+        <RefreshControl
+          refreshing={atualizando}
+          onRefresh={() => buscarRecados(true)}
+        />
+      }
+      ListHeaderComponent={
+        <View>
       <View style={styles.countRow}>
         <View style={styles.countIcon}>
           <Ionicons name="chatbubbles-outline" size={18} color="#1a2332" />
@@ -199,25 +261,28 @@ export default function Recados() {
 
       <Pressable
         onPress={() => {
-          handleSubmit(handleSave)();
+          handleSubmit(enviarRecado)();
         }}
         style={styles.buttonSave}
       >
         <Text style={{ textAlign: "center" }}>Salvar</Text>
       </Pressable>
-      <FlatList
-        data={recados}
-        contentContainerStyle={{ gap: 24 }}
-        keyExtractor={(item) => String(`${item.nome}${Math.random()}`)}
-        renderItem={({ item }) => (
-          <>
+        </View>
+      }
+      renderItem={({ item }) => (
+        <View style={styles.item}>
+          <View style={styles.itemTexto}>
             <Text style={styles.recado}>
-              {item.nome}:{item.mensagem}
+              {item.nome} · {item.tipo}
             </Text>
-          </>
-        )}
-      />
-    </View>
+            <Text style={styles.recado}>{item.mensagem}</Text>
+          </View>
+          <Pressable onPress={() => removerRecado(item.id)} hitSlop={8}>
+            <Text>X</Text>
+          </Pressable>
+        </View>
+      )}
+    />
   );
 }
 
@@ -225,6 +290,23 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: "#ffffff",
+  },
+  centro: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ffffff",
+  },
+  item: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  itemTexto: {
+    flex: 1,
+    gap: 4,
   },
   countRow: {
     flexDirection: "row",
