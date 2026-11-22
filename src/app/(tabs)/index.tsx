@@ -13,10 +13,12 @@ import {
 
 import Header from "../../components/Header";
 import styles from "../../styles/index";
-import { useEffect, useState } from "react";
-import { Link, router } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { Link, router, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
+import { Ionicons } from "@expo/vector-icons";
+import { CHAVES } from "../../chaves";
 
 // App Meu Perfil Dev (Etapa 4 de 4): a versão final da semana
 // Continue no mesmo projeto. A tela que você montou antes do intervalo agora ganha vida com o useState.
@@ -38,7 +40,9 @@ export default function Index() {
   const cargo = "Mentor";
   const wpp = "5519999999999";
   const githubUrl = "https://github.com/MatheusNadai";
+  const fotoGithub = "https://github.com/MatheusNadai.png";
   const email = "matheus@gmail.com";
+  const [foto, setFoto] = useState(fotoGithub);
   const skills = [
     { id: 1, name: "React Native" },
     { id: 2, name: "Ui / UX" },
@@ -100,6 +104,25 @@ export default function Index() {
     getStorage();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      let ativo = true;
+
+      async function lerFoto() {
+        const salva = await AsyncStorage.getItem(CHAVES.foto);
+        if (ativo) {
+          setFoto(salva ?? fotoGithub);
+        }
+      }
+
+      lerFoto();
+
+      return () => {
+        ativo = false;
+      };
+    }, []),
+  );
+
   return (
     <View style={styles.screen}>
       <StatusBar style="light" />
@@ -109,12 +132,15 @@ export default function Index() {
         contentContainerStyle={styles.content}
       >
         <View style={styles.header}>
-          <Image
-            source={{
-              uri: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=400&h=400&q=80",
-            }}
-            style={styles.photo}
-          />
+          <Image source={{ uri: foto }} style={styles.photo} />
+          <Pressable
+            accessibilityRole="button"
+            style={styles.trocarFotoButton}
+            onPress={() => router.push("/camera")}
+          >
+            <Ionicons name="camera" size={18} color="#ffffff" />
+            <Text style={styles.buttonText}>TROCAR FOTO</Text>
+          </Pressable>
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.role}>{cargo}</Text>
           <View
@@ -232,6 +258,26 @@ export default function Index() {
           onPress={compartilharPerfil}
         >
           <Text style={styles.buttonText}>COMPARTILHAR MEU PERFIL</Text>
+        </Pressable>
+
+        <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
+          Explore
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          style={styles.exploreButton}
+          onPress={() => router.push("/recados")}
+        >
+          <Ionicons name="chatbubbles" size={18} color="#ffffff" />
+          <Text style={styles.buttonText}>MURAL DE RECADOS</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          style={styles.exploreButton}
+          onPress={() => router.push("/mapa")}
+        >
+          <Ionicons name="location" size={18} color="#ffffff" />
+          <Text style={styles.buttonText}>ONDE ME ENCONTRAR</Text>
         </Pressable>
       </ScrollView>
     </View>

@@ -17,6 +17,21 @@ export default function Layout() {
             ...(headerOptions as StackOptions),
           }}
         />
+        <Stack.Screen
+          name="camera"
+          options={{
+            presentation: "modal",
+            title: "Câmera",
+            ...(headerOptions as StackOptions),
+          }}
+        />
+        <Stack.Screen
+          name="mapa"
+          options={{
+            title: "Onde me encontrar",
+            ...(headerOptions as StackOptions),
+          }}
+        />
       </Stack>
     </SafeAreaProvider>
   );

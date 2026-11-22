@@ -20,6 +20,22 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-status-bar", "expo-router"]
+    "plugins": [
+      "expo-status-bar",
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "O app usa a câmera para trocar a foto do perfil.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "O app usa sua localização para mostrar onde você está no mapa."
+        }
+      ]
+    ]
   }
 }

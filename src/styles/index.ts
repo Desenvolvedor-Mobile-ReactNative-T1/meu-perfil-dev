@@ -181,6 +181,26 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: "#2f80ed",
   },
+  trocarFotoButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 14,
+    backgroundColor: "#5c6770",
+  },
+  exploreButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: 14,
+    backgroundColor: "#1a2332",
+  },
 });
 
 export default styles;
