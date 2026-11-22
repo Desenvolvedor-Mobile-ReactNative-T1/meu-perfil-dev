@@ -72,7 +72,17 @@ npm install
 
 ## Como executar
 
-Inicie o ambiente de desenvolvimento com:
+O mural de recados lê e grava os dados numa API local. Sem o json-server no ar, a tela de recados não carrega.
+
+Na raiz do projeto, com o `db.json` ao lado, rode:
+
+```bash
+npx json-server@0.17.4 --watch db.json --host 0.0.0.0 --port 3000
+```
+
+O `--host 0.0.0.0` permite que outro celular, na mesma rede, acesse o seu IP. A URL usada pelo app está em `src/services/api.ts` (`http://192.168.0.17:3000`). Se o celular não conectar, troque esse endereço pelo IPv4 que aparecer no `ipconfig`.
+
+Deixe esse processo aberto e, em outro terminal, inicie o ambiente de desenvolvimento com:
 
 ```bash
 npm start

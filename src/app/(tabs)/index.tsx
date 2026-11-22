@@ -13,7 +13,7 @@ import {
 
 import Header from "../../components/Header";
 import styles from "../../styles/index";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, router, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
@@ -100,28 +100,20 @@ export default function Index() {
     }
   }
 
+  async function lerFoto() {
+    const salva = await AsyncStorage.getItem(CHAVES.foto);
+    setFoto(salva ?? fotoGithub);
+  }
+
   useEffect(() => {
     getStorage();
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      let ativo = true;
-
-      async function lerFoto() {
-        const salva = await AsyncStorage.getItem(CHAVES.foto);
-        if (ativo) {
-          setFoto(salva ?? fotoGithub);
-        }
-      }
-
-      lerFoto();
-
-      return () => {
-        ativo = false;
-      };
-    }, []),
-  );
+  // useFocusEffect roda a função quando esta tela aparece de novo.
+  // Assim, a foto salva na câmera entra no perfil ao voltar.
+  useFocusEffect(() => {
+    lerFoto();
+  });
 
   return (
     <View style={styles.screen}>
