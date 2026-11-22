@@ -157,6 +157,30 @@ const styles = StyleSheet.create({
   buttonAvailable: {
     backgroundColor: "#68c387",
   },
+  emailButton: {
+    alignItems: "center",
+    paddingVertical: 16,
+    borderRadius: 14,
+    backgroundColor: "#1f7a45",
+  },
+  whatsappButton: {
+    alignItems: "center",
+    paddingVertical: 16,
+    borderRadius: 14,
+    backgroundColor: "#b7ef8a",
+  },
+  githubButton: {
+    alignItems: "center",
+    paddingVertical: 16,
+    borderRadius: 14,
+    backgroundColor: "#1a2332",
+  },
+  shareButton: {
+    alignItems: "center",
+    paddingVertical: 16,
+    borderRadius: 14,
+    backgroundColor: "#2f80ed",
+  },
 });
 
 export default styles;

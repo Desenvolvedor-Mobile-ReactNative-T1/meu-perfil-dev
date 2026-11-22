@@ -7,6 +7,8 @@ import {
   Pressable,
   Image,
   TouchableOpacity,
+  Linking,
+  Share,
 } from "react-native";
 
 import Header from "../../components/Header";
@@ -14,6 +16,7 @@ import styles from "../../styles/index";
 import { useEffect, useState } from "react";
 import { Link, router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Haptics from "expo-haptics";
 
 // App Meu Perfil Dev (Etapa 4 de 4): a versão final da semana
 // Continue no mesmo projeto. A tela que você montou antes do intervalo agora ganha vida com o useState.
@@ -33,23 +36,26 @@ export default function Index() {
 
   const name = "Matheus";
   const cargo = "Mentor";
-
+  const wpp = "5519999999999";
+  const githubUrl = "https://github.com/MatheusNadai";
   const email = "matheus@gmail.com";
   const skills = [
     { id: 1, name: "React Native" },
     { id: 2, name: "Ui / UX" },
   ];
 
-  const handleRecommendations = () => {
+  const handleRecommendations = async () => {
     if (recommendations === 10) {
-      Alert.alert("Limite Atingido!", "Você Recomendou o que podia");
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       return;
     }
 
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setRecommendations(recommendations + 1);
   };
 
   const handleAvailable = async () => {
+    await Haptics.selectionAsync();
     await AsyncStorage.setItem(
       "@meuperfildev:disponibilidade",
       JSON.stringify(!available),
@@ -70,6 +76,25 @@ export default function Index() {
   const handleShowSkill = () => {
     setShowSkill(!showSkills);
   };
+
+  async function abrirLink(url: string) {
+    try {
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert("Não foi possível abrir o link.");
+    }
+  }
+
+  async function compartilharPerfil() {
+    try {
+      await Share.share({
+        message: `Conheça meu perfil: ${githubUrl}`,
+        url: githubUrl,
+      });
+    } catch {
+      Alert.alert("Não foi possível compartilhar.");
+    }
+  }
 
   useEffect(() => {
     getStorage();
@@ -178,6 +203,36 @@ export default function Index() {
             <Text style={styles.buttonText}>Entrar na tela de Recados</Text>
           </Pressable>
         </View>
+        {/* ----------------------------------------------------------- SEÇÃO FALE COMIGO*/}
+        <Text style={styles.sectionTitle}>Fale comigo</Text>
+        <Pressable
+          accessibilityRole="button"
+          style={styles.emailButton}
+          onPress={() => abrirLink(`mailto:${email}`)}
+        >
+          <Text style={styles.buttonText}>MANDAR E-MAIL</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          style={styles.whatsappButton}
+          onPress={() => abrirLink(`https://wa.me/${wpp}`)}
+        >
+          <Text style={styles.buttonTextDark}>CHAMAR NO WHATSAPP</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          style={styles.githubButton}
+          onPress={() => abrirLink(githubUrl)}
+        >
+          <Text style={styles.buttonText}>ABRIR MEU GITHUB</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          style={styles.shareButton}
+          onPress={compartilharPerfil}
+        >
+          <Text style={styles.buttonText}>COMPARTILHAR MEU PERFIL</Text>
+        </Pressable>
       </ScrollView>
     </View>
   );
