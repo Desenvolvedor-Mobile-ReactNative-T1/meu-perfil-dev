@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
-import type { RecadoLocal } from "../services/banco";
+import type { Recado } from "../services/recados";
 import { BotaoAcao } from "./BotaoAcao";
 
 type CartaoRecadoProps = {
-  recado: RecadoLocal;
+  recado: Recado;
   onApagar: () => void;
 };
 
@@ -45,12 +45,6 @@ export function CartaoRecado({ recado, onApagar }: CartaoRecadoProps) {
           {recado.nome} · {recado.tipo}
         </Text>
         <Text style={styles.mensagem}>{recado.mensagem}</Text>
-        {recado.pendente ? (
-          <View style={styles.pendente}>
-            <Ionicons name="cloud-offline-outline" size={14} color="#8a6a00" />
-            <Text style={styles.pendenteTexto}>aguardando envio</Text>
-          </View>
-        ) : null}
       </View>
       <BotaoAcao onPress={onApagar}>
         <Ionicons name="close" size={18} color="#6b7280" />
@@ -84,15 +78,5 @@ const styles = StyleSheet.create({
   mensagem: {
     color: "#3a3a3a",
     fontSize: 15,
-  },
-  pendente: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 2,
-  },
-  pendenteTexto: {
-    color: "#8a6a00",
-    fontSize: 13,
   },
 });

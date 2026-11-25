@@ -17,15 +17,13 @@ import { z } from "zod";
 import { BotaoAcao } from "../../components/BotaoAcao";
 import { CartaoRecado } from "../../components/CartaoRecado";
 import { recadoSchema } from "../../schemas/recado";
+import { lerCache, salvarCache } from "../../services/banco";
 import {
-  apagarLocal,
-  lerCache,
-  listarPendentes,
-  salvarCache,
-  salvarPendente,
-  type RecadoLocal,
-} from "../../services/banco";
-import { apagarRecado, criarRecado, listarRecados } from "../../services/recados";
+  apagarRecado,
+  criarRecado,
+  listarRecados,
+  type Recado,
+} from "../../services/recados";
 
 type RecadoForm = z.infer<typeof recadoSchema>;
 
@@ -33,7 +31,7 @@ const tiposMensagem = ["Elogio", "Sugestão", "Proposta"] as const;
 
 export default function Recados() {
   const navigation = useNavigation();
-  const [recados, setRecados] = useState<RecadoLocal[]>([]);
+  const [recados, setRecados] = useState<Recado[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
   const [offline, setOffline] = useState(false);
@@ -58,21 +56,6 @@ export default function Recados() {
   const querResposta = watch("querResposta");
   const mensagem = watch("mensagem");
 
-  async function enviarPendentes() {
-    const pendentes = await listarPendentes();
-
-    for (const recado of pendentes) {
-      await criarRecado({
-        nome: recado.nome,
-        email: recado.email,
-        querResposta: recado.querResposta,
-        mensagem: recado.mensagem,
-        tipo: recado.tipo,
-      });
-      await apagarLocal(recado.id);
-    }
-  }
-
   // API primeiro. Sem o json-server, o banco local mostra os recados salvos.
   async function carregar(puxando = false) {
     if (puxando) {
@@ -80,10 +63,9 @@ export default function Recados() {
     }
 
     try {
-      await enviarPendentes();
       const dados = await listarRecados();
       await salvarCache(dados);
-      setRecados(await lerCache());
+      setRecados(dados);
       setOffline(false);
     } catch {
       setRecados(await lerCache());
@@ -100,24 +82,16 @@ export default function Recados() {
       reset();
       await carregar();
     } catch {
-      await salvarPendente(dados);
-      reset();
-      setRecados(await lerCache());
       setOffline(true);
     }
   }
 
-  async function removerRecado(recado: RecadoLocal) {
-    if (recado.pendente) {
-      await apagarLocal(recado.id);
-      setRecados((lista) => lista.filter((item) => item.id !== recado.id));
-      return;
-    }
-
+  async function removerRecado(id: number) {
     try {
-      await apagarRecado(recado.id);
-      await apagarLocal(recado.id);
-      setRecados((lista) => lista.filter((item) => item.id !== recado.id));
+      await apagarRecado(id);
+      const lista = recados.filter((item) => item.id !== id);
+      setRecados(lista);
+      await salvarCache(lista);
     } catch {
       setOffline(true);
     }
@@ -299,7 +273,7 @@ export default function Recados() {
         </View>
       }
       renderItem={({ item }) => (
-        <CartaoRecado recado={item} onApagar={() => removerRecado(item)} />
+        <CartaoRecado recado={item} onApagar={() => removerRecado(item.id)} />
       )}
     />
   );

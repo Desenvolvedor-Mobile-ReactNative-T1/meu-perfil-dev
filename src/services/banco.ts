@@ -1,28 +1,9 @@
 import * as SQLite from "expo-sqlite";
-import type { NovoRecado, Recado } from "./recados";
-
-export type RecadoLocal = Recado & {
-  pendente: boolean;
-};
-
-type Linha = {
-  id: number;
-  nome: string;
-  email: string;
-  querResposta: number;
-  mensagem: string;
-  tipo: Recado["tipo"];
-  pendente: number;
-};
-
-let banco: SQLite.SQLiteDatabase | null = null;
+import type { Recado } from "./recados";
 
 async function abrir() {
-  if (banco) {
-    return banco;
-  }
+  const banco = await SQLite.openDatabaseAsync("meuperfil.db");
 
-  banco = await SQLite.openDatabaseAsync("meuperfil.db");
   await banco.execAsync(`
     CREATE TABLE IF NOT EXISTS recados (
       id INTEGER PRIMARY KEY NOT NULL,
@@ -30,35 +11,21 @@ async function abrir() {
       email TEXT NOT NULL,
       querResposta INTEGER NOT NULL,
       mensagem TEXT NOT NULL,
-      tipo TEXT NOT NULL,
-      pendente INTEGER NOT NULL DEFAULT 0
+      tipo TEXT NOT NULL
     );
   `);
 
   return banco;
 }
 
-function paraRecado(linha: Linha): RecadoLocal {
-  return {
-    id: linha.id,
-    nome: linha.nome,
-    email: linha.email,
-    querResposta: linha.querResposta === 1,
-    mensagem: linha.mensagem,
-    tipo: linha.tipo,
-    pendente: linha.pendente === 1,
-  };
-}
-
 export async function salvarCache(recados: Recado[]) {
-  const db = await abrir();
-  await db.execAsync("DELETE FROM recados WHERE pendente = 0");
+  const banco = await abrir();
+
+  await banco.execAsync("DELETE FROM recados");
 
   for (const recado of recados) {
-    await db.runAsync(
-      `INSERT OR REPLACE INTO recados
-        (id, nome, email, querResposta, mensagem, tipo, pendente)
-       VALUES (?, ?, ?, ?, ?, ?, 0)`,
+    await banco.runAsync(
+      "INSERT INTO recados (id, nome, email, querResposta, mensagem, tipo) VALUES (?, ?, ?, ?, ?, ?)",
       recado.id,
       recado.nome,
       recado.email,
@@ -70,40 +37,11 @@ export async function salvarCache(recados: Recado[]) {
 }
 
 export async function lerCache() {
-  const db = await abrir();
-  const linhas = await db.getAllAsync<Linha>(
-    "SELECT * FROM recados ORDER BY pendente ASC, id ASC",
-  );
+  const banco = await abrir();
+  const recados = await banco.getAllAsync<Recado>("SELECT * FROM recados");
 
-  return linhas.map(paraRecado);
-}
-
-export async function salvarPendente(recado: NovoRecado) {
-  const db = await abrir();
-
-  await db.runAsync(
-    `INSERT INTO recados
-      (id, nome, email, querResposta, mensagem, tipo, pendente)
-     VALUES (?, ?, ?, ?, ?, ?, 1)`,
-    -Date.now(),
-    recado.nome,
-    recado.email,
-    recado.querResposta ? 1 : 0,
-    recado.mensagem,
-    recado.tipo,
-  );
-}
-
-export async function apagarLocal(id: number) {
-  const db = await abrir();
-  await db.runAsync("DELETE FROM recados WHERE id = ?", id);
-}
-
-export async function listarPendentes() {
-  const db = await abrir();
-  const linhas = await db.getAllAsync<Linha>(
-    "SELECT * FROM recados WHERE pendente = 1 ORDER BY id ASC",
-  );
-
-  return linhas.map(paraRecado);
+  return recados.map((recado) => ({
+    ...recado,
+    querResposta: Boolean(recado.querResposta),
+  }));
 }
