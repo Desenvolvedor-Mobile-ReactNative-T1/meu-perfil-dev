@@ -1,7 +1,8 @@
 import { useRef } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
+import { BotaoAcao } from "../components/BotaoAcao";
 
 const cidade = {
   latitude: -22.9099,
@@ -48,9 +49,9 @@ export default function Mapa() {
           description="Onde me encontrar"
         />
       </MapView>
-      <Pressable style={styles.botao} onPress={irAteVoce}>
+      <BotaoAcao style={styles.botao} onPress={irAteVoce}>
         <Text style={styles.botaoTexto}>Ir até você</Text>
-      </Pressable>
+      </BotaoAcao>
     </View>
   );
 }

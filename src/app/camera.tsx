@@ -1,8 +1,9 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
 import { useRef, useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BotaoAcao } from "../components/BotaoAcao";
 import { CHAVES } from "../chaves";
 
 export default function Camera() {
@@ -41,9 +42,9 @@ export default function Camera() {
         <Text style={styles.texto}>
           Precisamos da câmera para trocar a foto do perfil.
         </Text>
-        <Pressable style={styles.botao} onPress={pedirPermissao}>
+        <BotaoAcao style={styles.botao} onPress={pedirPermissao}>
           <Text style={styles.botaoTexto}>Permitir câmera</Text>
-        </Pressable>
+        </BotaoAcao>
       </View>
     );
   }
@@ -52,12 +53,12 @@ export default function Camera() {
     return (
       <View style={styles.tela}>
         <Image source={{ uri: foto }} style={styles.preview} />
-        <Pressable style={styles.botao} onPress={usarFoto}>
+        <BotaoAcao style={styles.botao} onPress={usarFoto}>
           <Text style={styles.botaoTexto}>Usar esta foto</Text>
-        </Pressable>
-        <Pressable style={styles.botaoSecundario} onPress={() => setFoto(null)}>
+        </BotaoAcao>
+        <BotaoAcao style={styles.botaoSecundario} onPress={() => setFoto(null)}>
           <Text style={styles.botaoTexto}>Tirar outra</Text>
-        </Pressable>
+        </BotaoAcao>
       </View>
     );
   }
@@ -70,9 +71,9 @@ export default function Camera() {
         facing="front"
         onCameraReady={() => setPronta(true)}
       />
-      <Pressable style={styles.botao} onPress={tirarFoto}>
+      <BotaoAcao style={styles.botao} onPress={tirarFoto}>
         <Text style={styles.botaoTexto}>Tirar foto</Text>
-      </Pressable>
+      </BotaoAcao>
     </View>
   );
 }

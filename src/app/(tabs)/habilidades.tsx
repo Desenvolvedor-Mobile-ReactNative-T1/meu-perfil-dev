@@ -1,5 +1,6 @@
-import { Link } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { BotaoAcao } from "../../components/BotaoAcao";
 import dados from "../../data";
 
 export default function Habilidades() {
@@ -10,18 +11,20 @@ export default function Habilidades() {
       </Text>
 
       {dados.map((skill) => (
-        <Link key={skill.id} href={`/habilidade/${skill.id}`} asChild>
-          <Pressable style={styles.card}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{skill.name.slice(0, 1)}</Text>
-            </View>
-            <View style={styles.info}>
-              <Text style={styles.name}>{skill.name}</Text>
-              <Text style={styles.level}>{skill.detalhe}</Text>
-            </View>
-            <Text style={styles.chevron}>›</Text>
-          </Pressable>
-        </Link>
+        <BotaoAcao
+          key={skill.id}
+          style={styles.card}
+          onPress={() => router.push(`/habilidade/${skill.id}`)}
+        >
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{skill.name.slice(0, 1)}</Text>
+          </View>
+          <View style={styles.info}>
+            <Text style={styles.name}>{skill.name}</Text>
+            <Text style={styles.level}>{skill.detalhe}</Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
+        </BotaoAcao>
       ))}
     </ScrollView>
   );

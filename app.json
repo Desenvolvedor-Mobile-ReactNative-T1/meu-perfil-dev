@@ -35,7 +35,8 @@
         {
           "locationWhenInUsePermission": "O app usa sua localização para mostrar onde você está no mapa."
         }
-      ]
+      ],
+      "expo-sqlite"
     ]
   }
 }

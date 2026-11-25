@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Switch,
@@ -15,13 +14,18 @@ import {
 } from "react-native";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
+import { BotaoAcao } from "../../components/BotaoAcao";
+import { CartaoRecado } from "../../components/CartaoRecado";
 import { recadoSchema } from "../../schemas/recado";
 import {
-  apagarRecado,
-  criarRecado,
-  listarRecados,
-  type Recado,
-} from "../../services/recados";
+  apagarLocal,
+  lerCache,
+  listarPendentes,
+  salvarCache,
+  salvarPendente,
+  type RecadoLocal,
+} from "../../services/banco";
+import { apagarRecado, criarRecado, listarRecados } from "../../services/recados";
 
 type RecadoForm = z.infer<typeof recadoSchema>;
 
@@ -29,10 +33,10 @@ const tiposMensagem = ["Elogio", "Sugestão", "Proposta"] as const;
 
 export default function Recados() {
   const navigation = useNavigation();
-  const [recados, setRecados] = useState<Recado[]>([]);
+  const [recados, setRecados] = useState<RecadoLocal[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
-  const [erro, setErro] = useState(false);
+  const [offline, setOffline] = useState(false);
 
   const {
     control,
@@ -54,39 +58,68 @@ export default function Recados() {
   const querResposta = watch("querResposta");
   const mensagem = watch("mensagem");
 
-  const buscarRecados = async (puxando = false) => {
-    try {
-      if (puxando) {
-        setAtualizando(true);
-      }
+  async function enviarPendentes() {
+    const pendentes = await listarPendentes();
 
-      setErro(false);
+    for (const recado of pendentes) {
+      await criarRecado({
+        nome: recado.nome,
+        email: recado.email,
+        querResposta: recado.querResposta,
+        mensagem: recado.mensagem,
+        tipo: recado.tipo,
+      });
+      await apagarLocal(recado.id);
+    }
+  }
+
+  // API primeiro. Sem o json-server, o banco local mostra os recados salvos.
+  async function carregar(puxando = false) {
+    if (puxando) {
+      setAtualizando(true);
+    }
+
+    try {
+      await enviarPendentes();
       const dados = await listarRecados();
-      setRecados(dados);
+      await salvarCache(dados);
+      setRecados(await lerCache());
+      setOffline(false);
     } catch {
-      setErro(true);
+      setRecados(await lerCache());
+      setOffline(true);
     } finally {
       setCarregando(false);
       setAtualizando(false);
     }
-  };
+  }
 
   async function enviarRecado(dados: RecadoForm) {
     try {
       await criarRecado(dados);
       reset();
-      await buscarRecados();
+      await carregar();
     } catch {
-      setErro(true);
+      await salvarPendente(dados);
+      reset();
+      setRecados(await lerCache());
+      setOffline(true);
     }
   }
 
-  async function removerRecado(id: number) {
+  async function removerRecado(recado: RecadoLocal) {
+    if (recado.pendente) {
+      await apagarLocal(recado.id);
+      setRecados((lista) => lista.filter((item) => item.id !== recado.id));
+      return;
+    }
+
     try {
-      await apagarRecado(id);
-      setRecados((lista) => lista.filter((recado) => recado.id !== id));
+      await apagarRecado(recado.id);
+      await apagarLocal(recado.id);
+      setRecados((lista) => lista.filter((item) => item.id !== recado.id));
     } catch {
-      setErro(true);
+      setOffline(true);
     }
   }
 
@@ -97,7 +130,7 @@ export default function Recados() {
   }, [navigation, recados.length]);
 
   useEffect(() => {
-    buscarRecados();
+    carregar();
   }, []);
 
   const quantidade =
@@ -107,23 +140,6 @@ export default function Recados() {
     return (
       <View style={styles.centro}>
         <ActivityIndicator size="large" color="#2f9e44" />
-      </View>
-    );
-  }
-
-  if (erro) {
-    return (
-      <View style={styles.centro}>
-        <Text>Não foi possível carregar os recados.</Text>
-        <Pressable
-          style={styles.buttonSave}
-          onPress={() => {
-            setCarregando(true);
-            buscarRecados();
-          }}
-        >
-          <Text style={{ textAlign: "center" }}>Tentar de novo</Text>
-        </Pressable>
       </View>
     );
   }
@@ -138,149 +154,152 @@ export default function Recados() {
       refreshControl={
         <RefreshControl
           refreshing={atualizando}
-          onRefresh={() => buscarRecados(true)}
+          onRefresh={() => carregar(true)}
         />
       }
       ListHeaderComponent={
         <View>
-      <View style={styles.countRow}>
-        <View style={styles.countIcon}>
-          <Ionicons name="chatbubbles-outline" size={18} color="#1a2332" />
-        </View>
-        <Text style={styles.countText}>{quantidade}</Text>
-      </View>
-      <Controller
-        control={control}
-        name="nome"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <>
-            <Text>Nome</Text>
-            <TextInput
-              style={styles.input}
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-            />
-          </>
-        )}
-      />
-      {errors.nome && (
-        <Text style={{ color: "#e71b1b" }}>{errors.nome.message}</Text>
-      )}
-
-      <Controller
-        control={control}
-        name="tipo"
-        render={({ field: { onChange, value } }) => (
-          <View
-            style={{ gap: 12, flexDirection: "row", paddingHorizontal: 12 }}
-          >
-            {tiposMensagem.map((tipo) => {
-              const selecionado = value === tipo;
-
-              return (
-                <Pressable
-                  key={tipo}
-                  onPress={() => onChange(tipo)}
-                  style={{
-                    borderWidth: 1,
-                    borderColor: "#000",
-                    padding: 12,
-                    borderRadius: 12,
-                    backgroundColor: selecionado ? "green" : "white",
-                  }}
-                >
-                  <Text style={{ color: selecionado ? "white" : "#000" }}>
-                    {tipo}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        )}
-      />
-      {errors.tipo && (
-        <Text style={{ color: "#e71b1b" }}>{errors.tipo.message}</Text>
-      )}
-
-      <Controller
-        control={control}
-        name="mensagem"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <>
-            <Text>Recado</Text>
-            <TextInput
-              style={styles.input}
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              multiline
-              maxLength={200}
-            />
-          </>
-        )}
-      />
-      <Text>{mensagem.length}/200</Text>
-      {errors.mensagem && (
-        <Text style={{ color: "#e71b1b" }}>{errors.mensagem.message}</Text>
-      )}
-
-      <Controller
-        control={control}
-        name="querResposta"
-        render={({ field: { onChange, value } }) => (
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text>Quer receber resposta?</Text>
-            <Switch value={value} onValueChange={onChange} />
-          </View>
-        )}
-      />
-
-      {querResposta && (
-        <Controller
-          control={control}
-          name="email"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <>
-              <Text>Email</Text>
-              <TextInput
-                style={styles.input}
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </>
+          <Controller
+            control={control}
+            name="nome"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <>
+                <Text>Nome</Text>
+                <TextInput
+                  style={styles.input}
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                />
+              </>
+            )}
+          />
+          {errors.nome && (
+            <Text style={{ color: "#e71b1b" }}>{errors.nome.message}</Text>
           )}
-        />
-      )}
-      {errors.email && (
-        <Text style={{ color: "#e71b1b" }}>{errors.email.message}</Text>
-      )}
 
-      <Pressable
-        onPress={() => {
-          handleSubmit(enviarRecado)();
-        }}
-        style={styles.buttonSave}
-      >
-        <Text style={{ textAlign: "center" }}>Salvar</Text>
-      </Pressable>
+          <Controller
+            control={control}
+            name="tipo"
+            render={({ field: { onChange, value } }) => (
+              <View
+                style={{ gap: 12, flexDirection: "row", paddingHorizontal: 12 }}
+              >
+                {tiposMensagem.map((tipo) => {
+                  const selecionado = value === tipo;
+
+                  return (
+                    <BotaoAcao
+                      key={tipo}
+                      onPress={() => onChange(tipo)}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: "#000",
+                        padding: 12,
+                        borderRadius: 12,
+                        backgroundColor: selecionado ? "green" : "white",
+                      }}
+                    >
+                      <Text style={{ color: selecionado ? "white" : "#000" }}>
+                        {tipo}
+                      </Text>
+                    </BotaoAcao>
+                  );
+                })}
+              </View>
+            )}
+          />
+          {errors.tipo && (
+            <Text style={{ color: "#e71b1b" }}>{errors.tipo.message}</Text>
+          )}
+
+          <Controller
+            control={control}
+            name="mensagem"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <>
+                <Text>Recado</Text>
+                <TextInput
+                  style={styles.input}
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  multiline
+                  maxLength={200}
+                />
+              </>
+            )}
+          />
+          <Text>{mensagem.length}/200</Text>
+          {errors.mensagem && (
+            <Text style={{ color: "#e71b1b" }}>{errors.mensagem.message}</Text>
+          )}
+
+          <Controller
+            control={control}
+            name="querResposta"
+            render={({ field: { onChange, value } }) => (
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Text>Quer receber resposta?</Text>
+                <Switch value={value} onValueChange={onChange} />
+              </View>
+            )}
+          />
+
+          {querResposta && (
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <>
+                  <Text>Email</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </>
+              )}
+            />
+          )}
+          {errors.email && (
+            <Text style={{ color: "#e71b1b" }}>{errors.email.message}</Text>
+          )}
+
+          <BotaoAcao
+            onPress={() => {
+              handleSubmit(enviarRecado)();
+            }}
+            style={styles.buttonSave}
+          >
+            <Text style={styles.buttonSaveText}>ENVIAR RECADO</Text>
+          </BotaoAcao>
+
+          {offline ? (
+            <View style={styles.aviso}>
+              <Ionicons name="cloud-offline" size={18} color="#8a6a00" />
+              <Text style={styles.avisoTexto}>
+                Sem conexão. Recados salvos.
+              </Text>
+              <BotaoAcao onPress={() => carregar()}>
+                <Text style={styles.tentar}>Tentar de novo</Text>
+              </BotaoAcao>
+            </View>
+          ) : null}
+
+          <View style={styles.countRow}>
+            <View style={styles.countIcon}>
+              <Ionicons name="chatbubbles-outline" size={18} color="#1a2332" />
+            </View>
+            <Text style={styles.countText}>{quantidade}</Text>
+          </View>
         </View>
       }
       renderItem={({ item }) => (
-        <View style={styles.item}>
-          <View style={styles.itemTexto}>
-            <Text style={styles.recado}>
-              {item.nome} · {item.tipo}
-            </Text>
-            <Text style={styles.recado}>{item.mensagem}</Text>
-          </View>
-          <Pressable onPress={() => removerRecado(item.id)} hitSlop={8}>
-            <Text>X</Text>
-          </Pressable>
-        </View>
+        <CartaoRecado recado={item} onApagar={() => removerRecado(item)} />
       )}
     />
   );
@@ -296,17 +315,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#ffffff",
-  },
-  item: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  itemTexto: {
-    flex: 1,
-    gap: 4,
   },
   countRow: {
     flexDirection: "row",
@@ -328,16 +336,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
   },
-  list: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 24,
-    gap: 18,
-  },
-  recado: {
-    color: "#3a3a3a",
-    fontSize: 15,
-  },
   input: {
     margin: 12,
     borderRadius: 12,
@@ -346,9 +344,36 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   buttonSave: {
-    padding: 12,
+    padding: 14,
     margin: 12,
-    backgroundColor: "rgba(43, 165, 252, 0.6)",
+    backgroundColor: "#1c8ff5",
     borderRadius: 12,
+    alignItems: "center",
+  },
+  buttonSaveText: {
+    color: "#ffffff",
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  aviso: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: "#fff4cc",
+  },
+  avisoTexto: {
+    flex: 1,
+    color: "#6b5300",
+    fontSize: 14,
+  },
+  tentar: {
+    color: "#1c8ff5",
+    fontWeight: "700",
   },
 });

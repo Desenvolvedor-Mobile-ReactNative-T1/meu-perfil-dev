@@ -4,17 +4,16 @@ import {
   View,
   Alert,
   ScrollView,
-  Pressable,
   Image,
-  TouchableOpacity,
   Linking,
   Share,
 } from "react-native";
 
+import { BotaoAcao } from "../../components/BotaoAcao";
 import Header from "../../components/Header";
 import styles from "../../styles/index";
 import { useEffect, useState } from "react";
-import { Link, router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
@@ -125,14 +124,13 @@ export default function Index() {
       >
         <View style={styles.header}>
           <Image source={{ uri: foto }} style={styles.photo} />
-          <Pressable
-            accessibilityRole="button"
+          <BotaoAcao
             style={styles.trocarFotoButton}
             onPress={() => router.push("/camera")}
           >
             <Ionicons name="camera" size={18} color="#ffffff" />
             <Text style={styles.buttonText}>TROCAR FOTO</Text>
-          </Pressable>
+          </BotaoAcao>
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.role}>{cargo}</Text>
           <View
@@ -161,23 +159,22 @@ export default function Index() {
         <View style={styles.card}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Habilidades</Text>
-            <TouchableOpacity
-              accessibilityRole="button"
-              onPress={handleShowSkill}
-            >
+            <BotaoAcao onPress={handleShowSkill}>
               <Text style={styles.link}>
                 {showSkills ? "Ocultar" : "Exibir"}
               </Text>
-            </TouchableOpacity>
+            </BotaoAcao>
           </View>
           {showSkills ? (
             <View style={styles.skills}>
               {skills.map((el) => (
-                <Link key={el.id} href={`/habilidade/${el.id}`}>
-                  <View style={styles.skill}>
-                    <Text style={styles.skillText}>{el.name}</Text>
-                  </View>
-                </Link>
+                <BotaoAcao
+                  key={el.id}
+                  style={styles.skill}
+                  onPress={() => router.push(`/habilidade/${el.id}`)}
+                >
+                  <Text style={styles.skillText}>{el.name}</Text>
+                </BotaoAcao>
               ))}
             </View>
           ) : null}
@@ -185,17 +182,15 @@ export default function Index() {
 
         <View style={styles.actions}>
           <View style={styles.actionRow}>
-            <TouchableOpacity
-              accessibilityRole="button"
+            <BotaoAcao
               style={[styles.halfButton, styles.buttonRecommendations]}
               onPress={handleRecommendations}
             >
               <Text style={styles.halfValue}>{recommendations}</Text>
               <Text style={styles.halfLabel}>Recomendações</Text>
-            </TouchableOpacity>
+            </BotaoAcao>
 
-            <TouchableOpacity
-              accessibilityRole="button"
+            <BotaoAcao
               style={[
                 styles.halfButton,
                 available ? styles.buttonUnavailable : styles.buttonAvailable,
@@ -207,70 +202,57 @@ export default function Index() {
               >
                 {available ? "Tornar indisponível" : "Tornar disponível"}
               </Text>
-            </TouchableOpacity>
+            </BotaoAcao>
           </View>
 
-          <Pressable
-            accessibilityRole="button"
+          <BotaoAcao
             onPress={() => router.push("/recados")}
-            style={({ pressed }) => [
-              styles.contactButton,
-              pressed && styles.contactButtonPressed,
-            ]}
+            style={styles.contactButton}
           >
             <Text style={styles.buttonText}>Entrar na tela de Recados</Text>
-          </Pressable>
+          </BotaoAcao>
         </View>
         {/* ----------------------------------------------------------- SEÇÃO FALE COMIGO*/}
         <Text style={styles.sectionTitle}>Fale comigo</Text>
-        <Pressable
-          accessibilityRole="button"
+        <BotaoAcao
           style={styles.emailButton}
           onPress={() => abrirLink(`mailto:${email}`)}
         >
           <Text style={styles.buttonText}>MANDAR E-MAIL</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
+        </BotaoAcao>
+        <BotaoAcao
           style={styles.whatsappButton}
           onPress={() => abrirLink(`https://wa.me/${wpp}`)}
         >
           <Text style={styles.buttonTextDark}>CHAMAR NO WHATSAPP</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
+        </BotaoAcao>
+        <BotaoAcao
           style={styles.githubButton}
           onPress={() => abrirLink(githubUrl)}
         >
           <Text style={styles.buttonText}>ABRIR MEU GITHUB</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          style={styles.shareButton}
-          onPress={compartilharPerfil}
-        >
+        </BotaoAcao>
+        <BotaoAcao style={styles.shareButton} onPress={compartilharPerfil}>
           <Text style={styles.buttonText}>COMPARTILHAR MEU PERFIL</Text>
-        </Pressable>
+        </BotaoAcao>
 
         <Text style={[styles.sectionTitle, styles.sectionTitleSpaced]}>
           Explore
         </Text>
-        <Pressable
-          accessibilityRole="button"
+        <BotaoAcao
           style={styles.exploreButton}
           onPress={() => router.push("/recados")}
         >
           <Ionicons name="chatbubbles" size={18} color="#ffffff" />
           <Text style={styles.buttonText}>MURAL DE RECADOS</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
+        </BotaoAcao>
+        <BotaoAcao
           style={styles.exploreButton}
           onPress={() => router.push("/mapa")}
         >
           <Ionicons name="location" size={18} color="#ffffff" />
           <Text style={styles.buttonText}>ONDE ME ENCONTRAR</Text>
-        </Pressable>
+        </BotaoAcao>
       </ScrollView>
     </View>
   );
