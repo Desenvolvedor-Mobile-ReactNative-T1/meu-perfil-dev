@@ -18,6 +18,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { CHAVES } from "../../chaves";
+import { useFavoritos } from "../../context/FavoritosContext";
+import dados from "../../data";
 
 // App Meu Perfil Dev (Etapa 4 de 4): a versão final da semana
 // Continue no mesmo projeto. A tela que você montou antes do intervalo agora ganha vida com o useState.
@@ -42,6 +44,8 @@ export default function Index() {
   const fotoGithub = "https://github.com/MatheusNadai.png";
   const email = "matheus@gmail.com";
   const [foto, setFoto] = useState(fotoGithub);
+  const { favoritos } = useFavoritos();
+  const favoritas = dados.filter((item) => favoritos.includes(item.id));
   const skills = [
     { id: 1, name: "React Native" },
     { id: 2, name: "Ui / UX" },
@@ -178,6 +182,19 @@ export default function Index() {
               ))}
             </View>
           ) : null}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>★ Minhas favoritas</Text>
+          {favoritas.length === 0 ? (
+            <Text style={styles.bio}>Nenhuma ainda.</Text>
+          ) : (
+            favoritas.map((item) => (
+              <Text key={item.id} style={styles.bio}>
+                {item.name}
+              </Text>
+            ))
+          )}
         </View>
 
         <View style={styles.actions}>

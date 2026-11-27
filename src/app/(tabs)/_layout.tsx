@@ -1,6 +1,7 @@
 import { ComponentProps } from "react";
 import { Tabs, type TabsScreenOptions } from "expo-router/js-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { useFavoritos } from "../../context/FavoritosContext";
 import { headerOptions } from "../../styles/header";
 
 type IoniconName = ComponentProps<typeof Ionicons>["name"];
@@ -12,6 +13,8 @@ const icones: Record<string, IoniconName> = {
 };
 
 export default function TabsLayout() {
+  const { favoritos } = useFavoritos();
+
   return (
     <Tabs
       screenOptions={({ route }): TabsScreenOptions => ({
@@ -31,7 +34,11 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{ title: "Perfil" }} />
       <Tabs.Screen
         name="habilidades"
-        options={{ title: "Habilidades", headerShown: true }}
+        options={{
+          title: "Habilidades",
+          headerShown: true,
+          tabBarBadge: favoritos.length > 0 ? favoritos.length : undefined,
+        }}
       />
       <Tabs.Screen
         name="recados"
